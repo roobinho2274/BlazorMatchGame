@@ -1,5 +1,6 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using System.Timers
 
 <PageTitle>Home</PageTitle>
 
@@ -22,7 +23,7 @@
         {
             var animal = shuffledEmoji[animalNumber];
             var uniqueAnimalDescription = $"Animal {animalNumber}";
-           
+
             <div class="col-3">
                 <button @onclick="() => ButtonClick(animal, uniqueAnimalDescription)" type="button" class="btn btn-outline-dark"><h1>@animal</h1></button>
             </div>
@@ -30,6 +31,9 @@
     </div>
     <div class="row">
         <h2>Pares encontrados: @machFound</h2>
+    </div>
+    <div class="row">
+        <h2>Tempo: @timeDisplay</h2>
     </div>
 </div>
 @code {
@@ -41,12 +45,19 @@
     };
 
     List<string> shuffledEmoji = new();
+    Timer timer;
+    int tenthsOfSecondsElapsed = 0;
+    string timeDisplay = "0.0 s";
 
     protected override void OnInitialized()
     {
+        timer = new Timer(100);
+        timer.Elapsed += Timer_click;
+
         var rnd = new Random();
         shuffledEmoji = animalEmoji.OrderBy(x => rnd.Next()).ToList();
         machFound = 0;
+        tenthsOfSecondsElapsed = 0;
     }
 
     string lastAnimalFound = string.Empty;
@@ -58,6 +69,8 @@
         {
             lastAnimalFound = animal;
             lastAnimalDescription = animalDescription;
+
+            timer.Start();
         }
         else if (lastAnimalFound == animal && lastAnimalDescription != animalDescription)
         {
@@ -67,14 +80,32 @@
             .ToList();
 
             machFound++;
-            if(machFound == animalEmoji.Count / 2)
+            if (machFound == animalEmoji.Count / 2)
             {
+                timer.Stop();
+                timeDisplay += " - Jogar novamente?";
+
                 OnInitialized();
-            };
+            }
+            ;
         }
         else
         {
             lastAnimalFound = string.Empty;
         }
+    }
+
+    private void Timer_click(object sender, ElapsedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            tenthsOfSecondsElapsed++;
+            var seconds = (tenthsOfSecondsElapsed / 10);
+            var tenths = (tenthsOfSecondsElapsed % 10);
+            timeDisplay = $"{seconds}.{tenths} s";
+
+            StateHasChanged();
+        });
+
     }
 }
