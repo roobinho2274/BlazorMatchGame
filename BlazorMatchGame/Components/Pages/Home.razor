@@ -1,4 +1,5 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
@@ -17,24 +18,63 @@
 </style>
 <div class="container">
     <div class="row">
-        @foreach (var emoji in shuffledEmoji)
+        @for (var animalNumber = 0; animalNumber < shuffledEmoji.Count; animalNumber++)
         {
+            var animal = shuffledEmoji[animalNumber];
+            var uniqueAnimalDescription = $"Animal {animalNumber}";
+           
             <div class="col-3">
-                <button type="button" class="btn btn-outline-dark"><h1>@emoji</h1></button>
+                <button @onclick="() => ButtonClick(animal, uniqueAnimalDescription)" type="button" class="btn btn-outline-dark"><h1>@animal</h1></button>
             </div>
         }
     </div>
+    <div class="row">
+        <h2>Pares encontrados: @machFound</h2>
+    </div>
 </div>
 @code {
+
+    int machFound = 0;
     List<string> animalEmoji = new()
     {
         "🐶","🐶","🐵","🐵","🐱","🐱","🐹","🐹","🐰","🐰","🐮","🐮","🐷","🐷","🐸","🐸",
     };
 
     List<string> shuffledEmoji = new();
+
     protected override void OnInitialized()
     {
         var rnd = new Random();
         shuffledEmoji = animalEmoji.OrderBy(x => rnd.Next()).ToList();
+        machFound = 0;
+    }
+
+    string lastAnimalFound = string.Empty;
+    string lastAnimalDescription = string.Empty;
+
+    private void ButtonClick(string animal, string animalDescription)
+    {
+        if (lastAnimalFound == string.Empty)
+        {
+            lastAnimalFound = animal;
+            lastAnimalDescription = animalDescription;
+        }
+        else if (lastAnimalFound == animal && lastAnimalDescription != animalDescription)
+        {
+            lastAnimalFound = string.Empty;
+            shuffledEmoji = shuffledEmoji
+            .Select(x => x.Replace(animal, string.Empty))
+            .ToList();
+
+            machFound++;
+            if(machFound == animalEmoji.Count / 2)
+            {
+                OnInitialized();
+            };
+        }
+        else
+        {
+            lastAnimalFound = string.Empty;
+        }
     }
 }
